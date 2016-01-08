@@ -8,8 +8,8 @@ You may want to use it if you want to mimick Facebook app's behavior when you po
 
 ## Requirements
 
-This library depends on ![Kanna](https://github.com/tid-kijyun/Kanna) - a brilliant library for parsing HTML/XML on Swift.
-If you intend to use this, make sure to clone it to make ![URLPreview](#) work.
+This library depends on [Kanna](https://github.com/tid-kijyun/Kanna) - a brilliant library for parsing HTML/XML on Swift.
+If you intend to use this, make sure to clone it to make [URLPreview](#) work.
 
 (Cocoapod support will be added soon!)
 
