@@ -27,6 +27,11 @@ class ViewController: UIViewController {
 
     @IBAction func checkPreview(sender: AnyObject) {
         urlTextField.resignFirstResponder()
+        // refresh preview view
+        previewImageView.image = nil
+        titleLabel.text = ""
+        descriptionLabel.text = ""
+        
         if urlTextField.text!.isEmpty {
             print("Paste an URL first!")
         } else {
