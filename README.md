@@ -1,6 +1,7 @@
 # URLPreview
 
-An NSURL extension for showing preview info of webpages
+An NSURL extension for showing preview info of webpages.
+
 You may want to use it if you want to mimick Facebook app's behavior when you post a link on your status.
 
 ![Screenshot](https://raw.githubusercontent.com/itsmeichigo/URLPreview/master/ScreenShot.png)
