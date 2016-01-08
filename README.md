@@ -19,12 +19,9 @@ Pretty simple, all you need is a block:
 
 ```Swift
 if let url = NSURL(string: urlTextField.text!) {
-    UIApplication.sharedApplication().networkActivityIndicatorVisible = true
     url.fetchPageInfo({ (title, description, previewImage) -> Void in
-      UIApplication.sharedApplication().networkActivityIndicatorVisible = false
       // do whatever you want here
     }, failure: { (errorMessage) -> Void in
-      UIApplication.sharedApplication().networkActivityIndicatorVisible = false
       print(errorMessage)
     })
 } else {
