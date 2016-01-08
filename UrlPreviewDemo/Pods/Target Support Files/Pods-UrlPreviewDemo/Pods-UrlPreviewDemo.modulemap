@@ -1,0 +1,6 @@
+framework module Pods_UrlPreviewDemo {
+  umbrella header "Pods-UrlPreviewDemo-umbrella.h"
+
+  export *
+  module * { export * }
+}

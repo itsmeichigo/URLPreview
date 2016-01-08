@@ -1,2 +1,2 @@
 # URLPreview
-A helper tool for quickly showing preview of URLs
+An NSURL extension for showing preview info of webpages
