@@ -17,7 +17,9 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        // make round corners because i'm bored
+        previewImageView.layer.masksToBounds = true
+        previewImageView.layer.cornerRadius = 5
     }
 
     override func didReceiveMemoryWarning() {
@@ -71,12 +73,12 @@ class ViewController: UIViewController {
         print("Download Started")
         print("lastPathComponent: " + (url.lastPathComponent ?? ""))
         getDataFromUrl(url) { (data, response, error)  in
-            dispatch_async(dispatch_get_main_queue()) { () -> Void in
+            dispatch_async(dispatch_get_main_queue(), {
                 guard let data = data where error == nil else { return }
                 print(response?.suggestedFilename ?? "")
                 print("Download Finished")
                 imageView.image = UIImage(data: data)
-            }
+            })
         }
     }
 }

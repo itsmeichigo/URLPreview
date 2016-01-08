@@ -23,7 +23,9 @@ extension NSURL {
         
         NSURLConnection.sendAsynchronousRequest(request, queue: ValidationQueue.queue, completionHandler: { (response: NSURLResponse?, data: NSData?, error: NSError?) -> Void in
             if error != nil {
-                failure(errorMessage: "Url receive no response")
+                dispatch_async(dispatch_get_main_queue(), {
+                    failure(errorMessage: "Url receive no response")
+                })
                 return
             }
             
@@ -45,17 +47,22 @@ extension NSURL {
                                     }
                                     
                                     if node.element["property"]?.containsString("image") == true {
+                                        print("image: \(node.element["content"])")
                                         previewImage = node.element["content"]
                                     }
                                 }
                             }
                             
-                            completion(title: title, description: description, previewImage: previewImage)
+                            dispatch_async(dispatch_get_main_queue(), {
+                                completion(title: title, description: description, previewImage: previewImage)
+                            })
                         }
                         
                     }
                 } else {
-                    failure(errorMessage: "Url received \(urlResponse.statusCode) response")
+                    dispatch_async(dispatch_get_main_queue(), {
+                        failure(errorMessage: "Url received \(urlResponse.statusCode) response")
+                    })
                     return
                 }
             }
