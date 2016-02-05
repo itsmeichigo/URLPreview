@@ -44,5 +44,6 @@ Pod::Spec.new do |s|
   #
 
   s.source_files  = "Source/NSURL+URLPreview.swift"
+  s.dependency 'Kanna', '~> 1.0.0'
 
 end
