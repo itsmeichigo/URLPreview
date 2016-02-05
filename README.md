@@ -15,7 +15,7 @@ This library depends on [Kanna](https://github.com/tid-kijyun/Kanna) - a brillia
 #### Using Cocoapod
 
 Just add the following to your `podfile`
-    pod 'URLPreview'
+> pod 'URLPreview'
 
 #### Manual install
 
