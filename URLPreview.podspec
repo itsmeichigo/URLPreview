@@ -43,7 +43,8 @@ Pod::Spec.new do |s|
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
   #
 
-  s.source_files  = "Source/NSURL+URLPreview.swift"
+  s.source_files  = "Source"
+  s.framework  = "UIKit"
   s.dependency 'Kanna', '~> 1.0.0'
 
 end
