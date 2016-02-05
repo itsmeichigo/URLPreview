@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "URLPreview"
-  s.version      = "1.0.1"
+  s.version      = "1.0.2"
   s.summary      = "An NSURL extension for showing preview info of webpages."
 
   s.description  = "You may want to use this if you want to mimick Facebook app's behavior when you post a link on your status."
@@ -37,7 +37,7 @@ Pod::Spec.new do |s|
   # ――― Source Location ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
   #
 
-  s.source       = { :git => "https://github.com/itsmeichigo/URLPreview.git", :tag => "1.0" }
+  s.source       = { :git => "https://github.com/itsmeichigo/URLPreview.git", :tag => "1.0.2" }
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
