@@ -12,12 +12,12 @@ This library depends on [Kanna](https://github.com/tid-kijyun/Kanna) - a brillia
 
 ## Installation
 
-### Using Cocoapod
+#### Using Cocoapod
 
 Just add the following to your `podfile`
     pod 'URLPreview'
 
-### Manual install
+#### Manual install
 
 - Drag and drop folder `Source` to your project.
 - Copy the source from [Kanna](https://github.com/tid-kijyun/Kanna) to your project too.
@@ -41,7 +41,7 @@ if let url = NSURL(string: urlTextField.text!) {
 
 ## Contributing
 
-Contributions for bug fixing or improvements are welcomed. Feel free to submit a pull request.
+Contributions for bug fixing or improvements are welcome. Feel free to submit a pull request.
 
 ## Licence
 
