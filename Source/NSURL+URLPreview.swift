@@ -46,9 +46,9 @@ extension NSURL {
                                         description = node.element["content"]
                                     }
                                     
-                                    if node.element["property"]?.containsString("image") == true {
-                                        print("image: \(node.element["content"])")
-                                        previewImage = node.element["content"]
+                                    if node.element["property"]?.containsString("image") == true &&
+                                        node.element["content"]?.containsString("http") == true {
+                                            previewImage = node.element["content"]
                                     }
                                 }
                             }
