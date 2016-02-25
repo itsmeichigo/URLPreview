@@ -10,19 +10,6 @@ You may want to use it if you want to mimick Facebook app's behavior when you po
 
 This library depends on [Kanna](https://github.com/tid-kijyun/Kanna) - a brilliant library for parsing HTML/XML on Swift.
 
-## Installation
-
-#### Using Cocoapod
-
-Just add the following to your `podfile`
-> pod 'URLPreview'
-
-#### Manual install
-
-- Drag and drop folder `Source` to your project.
-- Copy the source from [Kanna](https://github.com/tid-kijyun/Kanna) to your project too.
-
-
 ## Usage
 
 Pretty simple, all you need is a block:
