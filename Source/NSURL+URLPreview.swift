@@ -18,7 +18,8 @@ extension NSURL {
     func fetchPageInfo(completion: ((title: String?, description: String?, previewImage: String?) -> Void), failure: ((errorMessage: String) -> Void)) {
         
         let request = NSMutableURLRequest(URL: self)
-//        request.HTTPM 
+        let newUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36"
+        request.setValue(newUserAgent, forHTTPHeaderField: "User-Agent")
         ValidationQueue.queue.cancelAllOperations()
         
         NSURLConnection.sendAsynchronousRequest(request, queue: ValidationQueue.queue, completionHandler: { (response: NSURLResponse?, data: NSData?, error: NSError?) -> Void in
