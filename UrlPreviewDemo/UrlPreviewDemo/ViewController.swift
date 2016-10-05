@@ -22,12 +22,7 @@ class ViewController: UIViewController {
         previewImageView.layer.cornerRadius = 5
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
-    @IBAction func checkPreview(sender: AnyObject) {
+    @IBAction func checkPreview(_ sender: AnyObject) {
         urlTextField.resignFirstResponder()
         // refresh preview view
         previewImageView.image = nil
@@ -37,10 +32,10 @@ class ViewController: UIViewController {
         if urlTextField.text!.isEmpty {
             print("Paste an URL first!")
         } else {
-            if let url = NSURL(string: urlTextField.text!) {
-                UIApplication.sharedApplication().networkActivityIndicatorVisible = true
+            if let url = URL(string: urlTextField.text!) {
+                UIApplication.shared.isNetworkActivityIndicatorVisible = true
                 url.fetchPageInfo({ (title, description, previewImage) -> Void in
-                    UIApplication.sharedApplication().networkActivityIndicatorVisible = false
+                    UIApplication.shared.isNetworkActivityIndicatorVisible = false
                     if let title = title {
                         self.titleLabel.text = title
                     }
@@ -50,10 +45,10 @@ class ViewController: UIViewController {
                     }
                     
                     if let imageUrl = previewImage {
-                        self.downloadImage(NSURL(string: imageUrl)!, imageView: self.previewImageView)
+                        self.downloadImage(URL(string: imageUrl)!, imageView: self.previewImageView)
                     }
                 }, failure: { (errorMessage) -> Void in
-                    UIApplication.sharedApplication().networkActivityIndicatorVisible = false
+                    UIApplication.shared.isNetworkActivityIndicatorVisible = false
                     print(errorMessage)
                 })
             } else {
@@ -63,18 +58,18 @@ class ViewController: UIViewController {
     }
     
     // helper for loading image
-    func getDataFromUrl(url:NSURL, completion: ((data: NSData?, response: NSURLResponse?, error: NSError? ) -> Void)) {
-        NSURLSession.sharedSession().dataTaskWithURL(url) { (data, response, error) in
-            completion(data: data, response: response, error: error)
-            }.resume()
+    func getDataFromUrl(_ url:URL, completion: @escaping ((_ data: Data?, _ response: URLResponse?, _ error: Error? ) -> Void)) {
+        URLSession.shared.dataTask(with: url, completionHandler: { (data, response, error) in
+            completion(data, response, error)
+        }).resume()
     }
 
-    func downloadImage(url: NSURL, imageView: UIImageView){
+    func downloadImage(_ url: URL, imageView: UIImageView){
         print("Download Started")
-        print("lastPathComponent: " + (url.lastPathComponent ?? ""))
+        print("lastPathComponent: " + url.lastPathComponent)
         getDataFromUrl(url) { (data, response, error)  in
-            dispatch_async(dispatch_get_main_queue(), {
-                guard let data = data where error == nil else { return }
+            DispatchQueue.main.async(execute: {
+                guard let data = data , error == nil else { return }
                 print(response?.suggestedFilename ?? "")
                 print("Download Finished")
                 imageView.image = UIImage(data: data)

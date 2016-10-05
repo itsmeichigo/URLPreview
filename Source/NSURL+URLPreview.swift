@@ -9,60 +9,60 @@
 import Foundation
 import Kanna
 
-extension NSURL {
+public extension URL {
     
     struct ValidationQueue {
-        static var queue = NSOperationQueue()
+        static var queue = OperationQueue()
     }
     
-    func fetchPageInfo(completion: ((title: String?, description: String?, previewImage: String?) -> Void), failure: ((errorMessage: String) -> Void)) {
+    func fetchPageInfo(_ completion: @escaping ((_ title: String?, _ description: String?, _ previewImage: String?) -> Void), failure: @escaping ((_ errorMessage: String) -> Void)) {
         
-        let request = NSMutableURLRequest(URL: self)
+        let request = NSMutableURLRequest(url: self)
         let newUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36"
         request.setValue(newUserAgent, forHTTPHeaderField: "User-Agent")
         ValidationQueue.queue.cancelAllOperations()
         
-        NSURLConnection.sendAsynchronousRequest(request, queue: ValidationQueue.queue, completionHandler: { (response: NSURLResponse?, data: NSData?, error: NSError?) -> Void in
+        NSURLConnection.sendAsynchronousRequest(request as URLRequest, queue: ValidationQueue.queue, completionHandler: { (response: URLResponse?, data: Data?, error: Error?) -> Void in
             if error != nil {
-                dispatch_async(dispatch_get_main_queue(), {
-                    failure(errorMessage: "Url receive no response")
+                DispatchQueue.main.async(execute: {
+                    failure("Url receive no response")
                 })
                 return
             }
             
-            if let urlResponse = response as? NSHTTPURLResponse {
+            if let urlResponse = response as? HTTPURLResponse {
                 if urlResponse.statusCode >= 200 && urlResponse.statusCode < 400 {
                     if let data = data {
                         
-                        if let doc = Kanna.HTML(html: data, encoding: NSUTF8StringEncoding) {
+                        if let doc = Kanna.HTML(html: data, encoding: String.Encoding.utf8) {
                             let title = doc.title
                             var description: String? = nil
                             var previewImage: String? = nil
                             print("title: \(title)")
-                            if let nodes = doc.head?.xpath("//meta").enumerate() {
+                            if let nodes = doc.head?.xpath("//meta").enumerated() {
                                 for node in nodes {
-                                    if node.element["property"]?.containsString("description") == true ||
+                                    if node.element["property"]?.contains("description") == true ||
                                     node.element["name"] == "description" {
                                         print("description: \(node.element["content"])")
                                         description = node.element["content"]
                                     }
                                     
-                                    if node.element["property"]?.containsString("image") == true &&
-                                        node.element["content"]?.containsString("http") == true {
+                                    if node.element["property"]?.contains("image") == true &&
+                                        node.element["content"]?.contains("http") == true {
                                             previewImage = node.element["content"]
                                     }
                                 }
                             }
                             
-                            dispatch_async(dispatch_get_main_queue(), {
-                                completion(title: title, description: description, previewImage: previewImage)
+                            DispatchQueue.main.async(execute: {
+                                completion(title, description, previewImage)
                             })
                         }
                         
                     }
                 } else {
-                    dispatch_async(dispatch_get_main_queue(), {
-                        failure(errorMessage: "Url received \(urlResponse.statusCode) response")
+                    DispatchQueue.main.async(execute: {
+                        failure("Url received \(urlResponse.statusCode) response")
                     })
                     return
                 }

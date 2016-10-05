@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "URLPreview"
-  s.version      = "1.0.2"
+  s.version      = "2.0"
   s.summary      = "An NSURL extension for showing preview info of webpages."
 
   s.description  = "You may want to use this if you want to mimick Facebook app's behavior when you post a link on your status."
@@ -37,7 +37,7 @@ Pod::Spec.new do |s|
   # ――― Source Location ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
   #
 
-  s.source       = { :git => "https://github.com/itsmeichigo/URLPreview.git", :tag => "1.0.2" }
+  s.source       = { :git => "https://github.com/itsmeichigo/URLPreview.git", :tag => s.version }
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
@@ -45,6 +45,8 @@ Pod::Spec.new do |s|
 
   s.source_files  = "Source"
   s.framework  = "UIKit"
-  s.dependency 'Kanna', '~> 1.0.0'
+  s.dependency 'Kanna', '~> 2.0.0'
+  s.requires_arc = true
+  s.pod_target_xcconfig = { "SWIFT_VERSION" => "3.0" }
 
 end

@@ -4,14 +4,6 @@ platform :ios, '8.0'
 use_frameworks!
 
 target 'UrlPreviewDemo' do
-pod 'Kanna', '~> 1.0.0'
-end
-
-target 'UrlPreviewDemoTests' do
-
-end
-
-target 'UrlPreviewDemoUITests' do
-
+pod 'Kanna', '~> 2.0.0'
 end
 
