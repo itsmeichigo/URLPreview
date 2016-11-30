@@ -22,7 +22,7 @@ public extension URL {
         request.setValue(newUserAgent, forHTTPHeaderField: "User-Agent")
         ValidationQueue.queue.cancelAllOperations()
         
-        NSURLConnection.sendAsynchronousRequest(request as URLRequest, queue: ValidationQueue.queue, completionHandler: { (response: URLResponse?, data: Data?, error: Error?) -> Void in
+        URLSession.shared.dataTask(with: request as URLRequest, completionHandler: { (data, response, error) in
             if error != nil {
                 DispatchQueue.main.async(execute: {
                     failure("Url receive no response")
@@ -42,14 +42,14 @@ public extension URL {
                             if let nodes = doc.head?.xpath("//meta").enumerated() {
                                 for node in nodes {
                                     if node.element["property"]?.contains("description") == true ||
-                                    node.element["name"] == "description" {
+                                        node.element["name"] == "description" {
                                         print("description: \(node.element["content"])")
                                         description = node.element["content"]
                                     }
                                     
                                     if node.element["property"]?.contains("image") == true &&
                                         node.element["content"]?.contains("http") == true {
-                                            previewImage = node.element["content"]
+                                        previewImage = node.element["content"]
                                     }
                                 }
                             }
@@ -67,6 +67,6 @@ public extension URL {
                     return
                 }
             }
-        })
+        }).resume()
     }
 }
