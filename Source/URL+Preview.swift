@@ -22,7 +22,7 @@ public extension URL {
         request.setValue(newUserAgent, forHTTPHeaderField: "User-Agent")
         ValidationQueue.queue.cancelAllOperations()
         
-        URLSession.shared.dataTask(with: request as URLRequest, completionHandler: { (data, response, error) in
+        NSURLConnection.sendAsynchronousRequest(request as URLRequest, queue: ValidationQueue.queue, completionHandler: { (response: URLResponse?, data: Data?, error: Error?) -> Void in
             if error != nil {
                 DispatchQueue.main.async(execute: {
                     failure("Url receive no response")
@@ -34,22 +34,21 @@ public extension URL {
                 if urlResponse.statusCode >= 200 && urlResponse.statusCode < 400 {
                     if let data = data {
                         
-                        if let doc = Kanna.HTML(html: data, encoding: String.Encoding.utf8) {
+                        if let doc = try? Kanna.HTML(html: data, encoding: String.Encoding.utf8) {
                             let title = doc.title
                             var description: String? = nil
                             var previewImage: String? = nil
-                            print("title: \(title)")
+                            
                             if let nodes = doc.head?.xpath("//meta").enumerated() {
                                 for node in nodes {
                                     if node.element["property"]?.contains("description") == true ||
-                                        node.element["name"] == "description" {
-                                        print("description: \(node.element["content"])")
+                                    node.element["name"] == "description" {
                                         description = node.element["content"]
                                     }
                                     
                                     if node.element["property"]?.contains("image") == true &&
                                         node.element["content"]?.contains("http") == true {
-                                        previewImage = node.element["content"]
+                                            previewImage = node.element["content"]
                                     }
                                 }
                             }
@@ -67,6 +66,6 @@ public extension URL {
                     return
                 }
             }
-        }).resume()
+        })
     }
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0700"
+   LastUpgradeVersion = "0930"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -13,11 +13,11 @@
             buildForProfiling = "YES"
             buildForArchiving = "YES">
             <BuildableReference
-               BuildableIdentifier = 'primary'
-               BlueprintIdentifier = 'EE57040B0F2FD9464A60DBE1F82FE001'
-               BlueprintName = 'Kanna'
-               ReferencedContainer = 'container:Pods.xcodeproj'
-               BuildableName = 'Kanna.framework'>
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "25622BDCA24151D7C101C916DCD4C64D"
+               BlueprintName = "Kanna"
+               ReferencedContainer = "container:Pods.xcodeproj"
+               BuildableName = "Kanna.framework">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>

@@ -24,6 +24,12 @@ SOFTWARE.
 */
 import Foundation
 
+#if SWIFT_PACKAGE
+import SwiftClibxml2
+#else
+import libxmlKanna
+#endif
+
 /**
 libxmlHTMLNode
 */
@@ -66,10 +72,10 @@ internal final class libxmlHTMLNode: XMLElement {
     
     var tagName:   String? {
         get {
-            if nodePtr != nil {
-                return String(cString: UnsafePointer((nodePtr?.pointee.name)!))
+            guard let name = nodePtr?.pointee.name else {
+                return nil
             }
-            return nil
+            return String(cString: name)
         }
 
         set {
@@ -94,7 +100,7 @@ internal final class libxmlHTMLNode: XMLElement {
 
     var parent: XMLElement? {
         get {
-            return libxmlHTMLNode(docPtr: docPtr!, node: (nodePtr?.pointee.parent)!)
+            return libxmlHTMLNode(document: doc, docPtr: docPtr!, node: (nodePtr?.pointee.parent)!)
         }
 
         set {
@@ -104,10 +110,24 @@ internal final class libxmlHTMLNode: XMLElement {
         }
     }
 
+    var nextSibling: XMLElement? {
+        let val = xmlNextElementSibling(self.nodePtr)
+        return self.node(from: val)
+    }
+
+    var previousSibling: XMLElement? {
+        let val = xmlPreviousElementSibling(self.nodePtr)
+        return self.node(from: val)
+    }
+
+    fileprivate weak var weakDocument: XMLDocument?
+    fileprivate var document: XMLDocument?
     fileprivate var docPtr:  htmlDocPtr? = nil
     fileprivate var nodePtr: xmlNodePtr? = nil
     fileprivate var isRoot:  Bool       = false
-    
+    fileprivate var doc: XMLDocument? {
+        return weakDocument ?? document
+    }
     
     subscript(attributeName: String) -> String?
     {
@@ -117,7 +137,11 @@ internal final class libxmlHTMLNode: XMLElement {
                 let mem = attr?.pointee
                 if let tagName = String(validatingUTF8: UnsafeRawPointer((mem?.name)!).assumingMemoryBound(to: CChar.self)) {
                     if attributeName == tagName {
-                        return libxmlGetNodeContent((mem?.children)!)
+                        if let children = mem?.children {
+                            return libxmlGetNodeContent(children)
+                        } else {
+                            return ""
+                        }
                     }
                 }
                 attr = attr?.pointee.next
@@ -134,13 +158,15 @@ internal final class libxmlHTMLNode: XMLElement {
         }
     }
     
-    init(docPtr: xmlDocPtr) {
+    init(document: XMLDocument?, docPtr: xmlDocPtr) {
+        self.weakDocument = document
         self.docPtr  = docPtr
         self.nodePtr = xmlDocGetRootElement(docPtr)
         self.isRoot  = true
     }
     
-    init(docPtr: xmlDocPtr, node: xmlNodePtr) {
+    init(document: XMLDocument?, docPtr: xmlDocPtr, node: xmlNodePtr) {
+        self.document = document
         self.docPtr  = docPtr
         self.nodePtr = node
     }
@@ -168,7 +194,7 @@ internal final class libxmlHTMLNode: XMLElement {
             return XPathObject.none
         }
 
-        return XPathObject(docPtr: docPtr!, object: result!.pointee)
+        return XPathObject(document: doc, docPtr: docPtr!, object: result!.pointee)
     }
     
     func xpath(_ xpath: String) -> XPathObject {
@@ -184,7 +210,7 @@ internal final class libxmlHTMLNode: XMLElement {
     }
     
     func css(_ selector: String, namespaces: [String:String]?) -> XPathObject {
-        if let xpath = CSS.toXPath(selector) {
+        if let xpath = try? CSS.toXPath(selector) {
             if isRoot {
                 return self.xpath(xpath, namespaces: namespaces)
             } else {
@@ -236,15 +262,29 @@ internal final class libxmlHTMLNode: XMLElement {
         xmlUnlinkNode(node.nodePtr)
         xmlFree(node.nodePtr)
     }
+
+    private func node(from ptr: xmlNodePtr?) -> XMLElement? {
+        guard let doc = self.doc, let docPtr = self.docPtr, let nodePtr = ptr else {
+            return nil
+        }
+
+        let element = libxmlHTMLNode(document: doc, docPtr: docPtr, node: nodePtr)
+        return element
+    }
 }
 
 private func libxmlGetNodeContent(_ nodePtr: xmlNodePtr) -> String? {
     let content = xmlNodeGetContent(nodePtr)
-    if let result  = String(validatingUTF8: UnsafeRawPointer(content!).assumingMemoryBound(to: CChar.self)) {
+    defer {
+        #if swift(>=4.1)
+        content?.deallocate()
+        #else
         content?.deallocate(capacity: 1)
+        #endif
+    }
+    if let result  = String(validatingUTF8: UnsafeRawPointer(content!).assumingMemoryBound(to: CChar.self)) {
         return result
     }
-    content?.deallocate(capacity: 1)
     return nil
 }
 

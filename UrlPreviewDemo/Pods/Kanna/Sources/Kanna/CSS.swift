@@ -24,10 +24,29 @@ SOFTWARE.
 */
 import Foundation
 
+#if SWIFT_PACKAGE
+import SwiftClibxml2
+#else
+import libxmlKanna
+#endif
+
+typealias AKRegularExpression  = NSRegularExpression
+#if os(Linux) && swift(>=4)
+typealias AKTextCheckingResult = NSTextCheckingResult
+#elseif os(Linux) && swift(>=3)
+typealias AKTextCheckingResult = TextCheckingResult
+#else
+typealias AKTextCheckingResult = NSTextCheckingResult
+#endif
+
+public enum CSSError: Error {
+    case UnsupportSyntax(String)
+}
+
 /**
 CSS
 */
-public struct CSS {
+public enum CSS {
     /**
     CSS3 selector to XPath
     
@@ -35,39 +54,44 @@ public struct CSS {
     
     @return XPath
     */
-    public static func toXPath(_ selector: String) -> String? {
+    public static func toXPath(_ css: String) throws -> String {
+        let selectorGroups = css.components(separatedBy: ",")
+        return try selectorGroups
+            .map { try toXPath(selector: $0) }
+            .joined(separator: " | ")
+    }
+
+    private static func toXPath(selector: String) throws -> String {
         var xpath = "//"
         var str = selector
         var prev = str
 
-        while str.utf16.count > 0 {
+        while !str.isEmpty {
             var attributes: [String] = []
             var combinator: String = ""
-            
-            if let result = matchBlank(str) {
-                str = (str as NSString).substring(from: result.range.length)
-            }
-            
+
+            str = str.trimmingCharacters(in: .whitespaces)
+
             // element
             let element = getElement(&str)
-            
+
             // class / id
             while let attr = getClassId(&str) {
                 attributes.append(attr)
             }
-            
+
             // attribute
             while let attr = getAttribute(&str) {
                 attributes.append(attr)
             }
-            
+
             // matchCombinator
             if let combi = genCombinator(&str) {
                 combinator = combi
             }
-            
+
             // generate xpath phrase
-            let attr = attributes.reduce("") { $0.isEmpty ? $1 : $0 + " and " + $1 }
+            let attr = attributes.joined(separator: " and ")
             if attr.isEmpty {
                 xpath += "\(element)\(combinator)"
             } else {
@@ -75,8 +99,7 @@ public struct CSS {
             }
 
             if str == prev {
-                print("CSS Syntax Error: Unsupport syntax '\(selector)'")
-                return nil
+                throw CSSError.UnsupportSyntax(selector)
             }
             prev = str
         }
@@ -84,11 +107,11 @@ public struct CSS {
     }
 }
 
-private func firstMatch(_ pattern: String) -> (String) -> NSTextCheckingResult? {
+private func firstMatch(_ pattern: String) -> (String) -> AKTextCheckingResult? {
     return { str in
         let length = str.utf16.count
         do {
-            let regex = try NSRegularExpression(pattern: pattern, options: .caseInsensitive)
+            let regex = try AKRegularExpression(pattern: pattern, options: .caseInsensitive)
             if let result = regex.firstMatch(in: str, options: .reportProgress, range: NSRange(location: 0, length: length)) {
                 return result
             }
@@ -122,37 +145,47 @@ private func nth_last_child(a: Int, b: Int) -> String {
     return nth(prefix: "following", a: a, b: b)
 }
 
-private let matchBlank        = firstMatch("^\\s*|\\s$")
-private let matchElement      = firstMatch("^([a-z0-9\\*_-]+)((\\|)([a-z0-9\\*_-]+))?")
-private let matchClassId      = firstMatch("^([#.])([a-z0-9\\*_-]+)")
+private let escapePattern = "(?:\\\\([!\"#\\$%&\'\\(\\)\\*\\+,\\./:;<=>\\?@\\[\\\\\\]\\^`\\{\\|\\}~]))"
+private let escapeRepeatPattern = "\(escapePattern)*"
+private let matchElement      = firstMatch("^((?:[a-z0-9\\*_-]+\(escapeRepeatPattern))+)((\\|)((?:[a-z0-9\\*_-]+\(escapeRepeatPattern))+))?")
+private let matchClassId      = firstMatch("^([#.])((?:[a-z0-9\\*_-]+\(escapeRepeatPattern))+)")
 private let matchAttr1        = firstMatch("^\\[([^\\]]*)\\]")
-private let matchAttr2        = firstMatch("^\\[\\s*([^~\\|\\^\\$\\*=\\s]+)\\s*([~\\|\\^\\$\\*]?=)\\s*[\"\']([^\"]*)[\"\']\\s*\\]")
+private let matchAttr2        = firstMatch("^\\[\\s*([^~\\|\\^\\$\\*=\\s]+)\\s*([~\\|\\^\\$\\*]?=)\\s*(.*)\\s*\\]")
 private let matchAttrN        = firstMatch("^:not\\((.*?\\)?)\\)")
-private let matchPseudo       = firstMatch("^:([\'()a-z0-9_+-]+)")
+private let matchPseudo       = firstMatch("^:([\'\"()a-z0-9_+-]+)")
 private let matchCombinator   = firstMatch("^\\s*([\\s>+~,])\\s*")
 private let matchSubNthChild  = firstMatch("^(nth-child|nth-last-child)\\(\\s*(odd|even|\\d+)\\s*\\)")
 private let matchSubNthChildN = firstMatch("^(nth-child|nth-last-child)\\(\\s*(-?\\d*)n(\\+\\d+)?\\s*\\)")
 private let matchSubNthOfType = firstMatch("nth-of-type\\((odd|even|\\d+)\\)")
 private let matchSubContains  = firstMatch("contains\\([\"\'](.*?)[\"\']\\)")
-private let matchSubBlank     = firstMatch("^\\s*$")
 
-private func substringWithRangeAtIndex(_ result: NSTextCheckingResult, str: String, at: Int) -> String {
+private func substringWithRangeAtIndex(_ result: AKTextCheckingResult, str: String, at: Int) -> String {
     if result.numberOfRanges > at {
+        #if swift(>=4.0) || os(Linux)
+        let range = result.range(at: at)
+        #else
         let range = result.rangeAt(at)
+        #endif
         if range.length > 0 {
-            return (str as NSString).substring(with: range)
+            let startIndex = str.index(str.startIndex, offsetBy: range.location)
+            let endIndex = str.index(startIndex, offsetBy: range.length)
+            return String(str[startIndex..<endIndex])
         }
     }
     return ""
 }
 
+private func escapeCSS(_ text: String) -> String {
+    return text.replacingOccurrences(of: escapePattern, with: "$1", options: .regularExpression, range: nil)
+}
+
 private func getElement(_ str: inout String, skip: Bool = true) -> String {
     if let result = matchElement(str) {
-        let (text, text2) = (substringWithRangeAtIndex(result, str: str, at: 1),
-                             substringWithRangeAtIndex(result, str: str, at: 4))
+        let (text, text2) = (escapeCSS(substringWithRangeAtIndex(result, str: str, at: 1)),
+                             escapeCSS(substringWithRangeAtIndex(result, str: str, at: 5)))
         
         if skip {
-            str = str.substring(from: str.characters.index(str.startIndex, offsetBy: result.range.length))
+            str = String(str[str.index(str.startIndex, offsetBy: result.range.length)..<str.endIndex])
         }
         
         // tag with namespace
@@ -170,10 +203,10 @@ private func getElement(_ str: inout String, skip: Bool = true) -> String {
 
 private func getClassId(_ str: inout String, skip: Bool = true) -> String? {
     if let result = matchClassId(str) {
-        let (attr, text) = (substringWithRangeAtIndex(result, str: str, at: 1),
-                            substringWithRangeAtIndex(result, str: str, at: 2))
+        let (attr, text) = (escapeCSS(substringWithRangeAtIndex(result, str: str, at: 1)),
+                            escapeCSS(substringWithRangeAtIndex(result, str: str, at: 2)))
         if skip {
-            str = str.substring(from: str.characters.index(str.startIndex, offsetBy: result.range.length))
+            str = String(str[str.index(str.startIndex, offsetBy: result.range.length)..<str.endIndex])
         }
         
         if attr.hasPrefix("#") {
@@ -187,11 +220,12 @@ private func getClassId(_ str: inout String, skip: Bool = true) -> String? {
 
 private func getAttribute(_ str: inout String, skip: Bool = true) -> String? {
     if let result = matchAttr2(str) {
-        let (attr, expr, text) = (substringWithRangeAtIndex(result, str: str, at: 1),
+        let (attr, expr, text) = (escapeCSS(substringWithRangeAtIndex(result, str: str, at: 1)),
                                   substringWithRangeAtIndex(result, str: str, at: 2),
-                                  substringWithRangeAtIndex(result, str: str, at: 3))
+                                  escapeCSS(substringWithRangeAtIndex(result, str: str, at: 3).replacingOccurrences(of: "[\'\"](.*)[\'\"]", with: "$1", options: .regularExpression, range: nil)))
+
         if skip {
-            str = str.substring(from: str.characters.index(str.startIndex, offsetBy: result.range.length))
+            str = String(str[str.index(str.startIndex, offsetBy: result.range.length)..<str.endIndex])
         }
         
         switch expr {
@@ -213,7 +247,7 @@ private func getAttribute(_ str: inout String, skip: Bool = true) -> String? {
     } else if let result = matchAttr1(str) {
         let atr = substringWithRangeAtIndex(result, str: str, at: 1)
         if skip {
-            str = str.substring(from: str.characters.index(str.startIndex, offsetBy: result.range.length))
+            str = String(str[str.index(str.startIndex, offsetBy: result.range.length)..<str.endIndex])
         }
         
         return "@\(atr)"
@@ -225,7 +259,7 @@ private func getAttribute(_ str: inout String, skip: Bool = true) -> String? {
     } else if let result = matchPseudo(str) {
         let one = substringWithRangeAtIndex(result, str: str, at: 1)
         if skip {
-            str = str.substring(from: str.characters.index(str.startIndex, offsetBy: result.range.length))
+            str = String(str[str.index(str.startIndex, offsetBy: result.range.length)..<str.endIndex])
         }
         
         switch one {
@@ -245,8 +279,6 @@ private func getAttribute(_ str: inout String, skip: Bool = true) -> String? {
             return "not(node())"
         case "root":
             return "not(parent::*)"
-        case "last-child":
-            return "count(following-sibling::*) = 0"
         default:
             if let sub = matchSubNthChild(one) {
                 let (nth, arg1) = (substringWithRangeAtIndex(sub, str: one, at: 1),
@@ -293,13 +325,21 @@ private func getAttrNot(_ str: inout String, skip: Bool = true) -> String? {
     if let result = matchAttrN(str) {
         var one = substringWithRangeAtIndex(result, str: str, at: 1)
         if skip {
-            str = str.substring(from: str.characters.index(str.startIndex, offsetBy: result.range.length))
+            str = String(str[str.index(str.startIndex, offsetBy: result.range.length)..<str.endIndex])
         }
         
         if let attr = getAttribute(&one, skip: false) {
             return attr
         } else if let sub = matchElement(one) {
-            let elem = (one as NSString).substring(with: sub.rangeAt(1))
+            #if swift(>=4.0) || os(Linux)
+            let range = sub.range(at: 1)
+            #else
+            let range = sub.rangeAt(1)
+            #endif
+            let startIndex = one.index(one.startIndex, offsetBy: range.location)
+            let endIndex   = one.index(startIndex, offsetBy: range.length)
+
+            let elem = one[startIndex ..< endIndex]
             return "self::\(elem)"
         } else if let attr = getClassId(&one) {
             return attr
@@ -312,7 +352,7 @@ private func genCombinator(_ str: inout String, skip: Bool = true) -> String? {
     if let result = matchCombinator(str) {
         let one = substringWithRangeAtIndex(result, str: str, at: 1)
         if skip {
-            str = str.substring(from: str.characters.index(str.startIndex, offsetBy: result.range.length))
+            str = String(str[str.index(str.startIndex, offsetBy: result.range.length)..<str.endIndex])
         }
         
         switch one {
@@ -323,11 +363,7 @@ private func genCombinator(_ str: inout String, skip: Bool = true) -> String? {
         case "~":
             return "/following-sibling::"
         default:
-            if let _ = matchSubBlank(one) {
-                return "//"
-            } else {
-                return " | //"
-            }
+            return "//"
         }
     }
     return nil
