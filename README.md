@@ -8,7 +8,7 @@ You may want to use it if you want to mimick Facebook app's behavior when you po
 
 ## Requirements
 
-- Swift 4.2 & xCode 10
+- Swift 5 & Xcode 10.2
 - This library depends on [Kanna](https://github.com/tid-kijyun/Kanna)
 
 ## Usage
