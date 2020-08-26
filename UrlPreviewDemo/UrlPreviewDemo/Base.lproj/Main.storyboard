@@ -80,7 +80,7 @@
                                     <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Paste an URL here" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="CiI-7j-Raw">
                                         <rect key="frame" x="0.0" y="0.0" width="316" height="30"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                        <textInputTraits key="textInputTraits"/>
+                                        <textInputTraits key="textInputTraits" keyboardType="URL"/>
                                         <connections>
                                             <action selector="checkPreview:" destination="BYZ-38-t0r" eventType="primaryActionTriggered" id="SWe-5h-z0V"/>
                                         </connections>
