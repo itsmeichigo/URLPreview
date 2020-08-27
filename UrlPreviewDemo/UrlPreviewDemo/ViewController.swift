@@ -14,6 +14,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var previewImageView: UIImageView!
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var descriptionLabel: UILabel!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,6 +25,7 @@ class ViewController: UIViewController {
 
     @IBAction func checkPreview(_ sender: AnyObject) {
         urlTextField.resignFirstResponder()
+        
         // refresh preview view
         previewImageView.image = nil
         titleLabel.text = ""
@@ -34,8 +36,14 @@ class ViewController: UIViewController {
         } else {
             if let url = URL(string: urlTextField.text!) {
                 UIApplication.shared.isNetworkActivityIndicatorVisible = true
+                
+                activityIndicator.startAnimating()
+                
                 url.fetchPageInfo({ (title, description, previewImage) -> Void in
                     UIApplication.shared.isNetworkActivityIndicatorVisible = false
+                    
+                    self.activityIndicator.stopAnimating()
+                    
                     if let title = title {
                         self.titleLabel.text = title
                     }

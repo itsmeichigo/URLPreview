@@ -17,12 +17,13 @@ public extension URL {
     
     func fetchPageInfo(_ completion: @escaping ((_ title: String?, _ description: String?, _ previewImage: String?) -> Void), failure: @escaping ((_ errorMessage: String) -> Void)) {
         
-        let request = NSMutableURLRequest(url: self)
-        let newUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36"
-        request.setValue(newUserAgent, forHTTPHeaderField: "User-Agent")
-        ValidationQueue.queue.cancelAllOperations()
+        var request = URLRequest(url: self)
         
-        NSURLConnection.sendAsynchronousRequest(request as URLRequest, queue: ValidationQueue.queue, completionHandler: { (response: URLResponse?, data: Data?, error: Error?) -> Void in
+        let newUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36"
+        
+        request.setValue(newUserAgent, forHTTPHeaderField: "User-Agent")
+
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
             if error != nil {
                 DispatchQueue.main.async(execute: {
                     failure("Url receive no response")
@@ -42,13 +43,13 @@ public extension URL {
                             if let nodes = doc.head?.xpath("//meta").enumerated() {
                                 for node in nodes {
                                     if node.element["property"]?.contains("description") == true ||
-                                    node.element["name"] == "description" {
+                                        node.element["name"] == "description" {
                                         description = node.element["content"]
                                     }
                                     
                                     if node.element["property"]?.contains("image") == true &&
                                         node.element["content"]?.contains("http") == true {
-                                            previewImage = node.element["content"]
+                                        previewImage = node.element["content"]
                                     }
                                 }
                             }
@@ -57,7 +58,6 @@ public extension URL {
                                 completion(title, description, previewImage)
                             })
                         }
-                        
                     }
                 } else {
                     DispatchQueue.main.async(execute: {
@@ -66,6 +66,6 @@ public extension URL {
                     return
                 }
             }
-        })
+        }.resume()
     }
 }
