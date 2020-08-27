@@ -45,7 +45,7 @@ Pod::Spec.new do |s|
 
   s.source_files  = "Source"
   s.framework  = "UIKit"
-  s.dependency 'Kanna', '~> 4.0.0'
+  s.dependency 'Kanna', '~> 5.2.2'
   s.requires_arc = true
   s.swift_versions = ['3.2', '4.0', '4.2', '5']
 

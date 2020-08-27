@@ -3,6 +3,5 @@ use_frameworks!
 
 target 'UrlPreviewDemo' do
 pod 'Kanna'
-pod 'Alamofire'
 end
 
